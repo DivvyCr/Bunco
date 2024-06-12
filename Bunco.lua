@@ -890,3 +890,153 @@ create_joker({ -- Nil Bill
         end
     end
 })
+
+
+
+-- Divvy's Preview mod compatibility:
+-- (https://github.com/DivvyCr/Balatro-Preview)
+if DV and DV.SIM then
+   DV.SIM.JOKERS.simulate_cassette = function(joker, context)
+      if context.cardarea == G.play and context.individual then
+         local other_card = context.other_card
+
+         local is_light = DV.SIM.is_suit(other_card, 'Hearts')
+            or DV.SIM.is_suit(other_card, 'Diamonds')
+            or DV.SIM.is_suit(other_card, 'Fleurons')
+
+         local is_dark = DV.SIM.is_suit(other_card, 'Spades')
+            or DV.SIM.is_suit(other_card, 'Clubs')
+            or DV.SIM.is_suit(other_card, 'Halberds')
+
+         local side = joker.ability.extra.side
+         if is_light and side == 'A' then
+            DV.SIM.add_chips(joker.ability.extra.chips)
+         end
+         if is_dark and side == 'B' then
+            DV.SIM.add_mult(joker.ability.extra.mult)
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_mosaic = function(joker, context)
+      if context.cardarea == G.play and context.individual then
+         if context.other_card.ability.effect == "Stone Card" then
+            DV.SIM.add_mult(joker.ability.extra.mult)
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_voxel = function(joker, context)
+      if context.cardarea == G.jokers and context.global then
+         DV.SIM.x_mult(joker.ability.extra.xmult)
+      end
+   end
+   DV.SIM.JOKERS.simulate_crop_circles = function(joker, context)
+      if context.cardarea == G.play and context.individual then
+         local other_card = context.other_card
+         if other_card.ability.effect == "Stone Card" then return end
+
+         local num_circles = 0
+
+         if DV.SIM.is_suit(other_card, 'Fleurons') then num_circles = num_circles + 4 end
+         if DV.SIM.is_suit(other_card, 'Clubs')    then num_circles = num_circles + 3 end
+
+         if DV.SIM.is_rank(other_card, 8)  then num_circles = num_circles + 2 end
+         if DV.SIM.is_rank(other_card, 12) then num_circles = num_circles + 1 end
+
+         DV.SIM.add_mult(num_circles)
+      end
+   end
+   DV.SIM.JOKERS.simulate_xray = function(joker, context)
+      if context.cardarea == G.play and context.global then
+         DV.SIM.xmult(joker.ability.extra.xmult)
+      end
+   end
+   DV.SIM.JOKERS.simulate_dread = function(joker, context)
+      -- Effect not relevant (takes place outside play)
+   end
+   DV.SIM.JOKERS.simulate_prehistoric = function(joker, context)
+      if context.cardarea == G.play and context.individual then
+         local other_card = context.other_card
+         for _, v in pairs(joker.ability.extra.card_list) do
+            if v == other_card.rank .. other_card.suit then
+               DV.SIM.add_mult(joker.ability.extra.mult)
+            end
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_linocut = function(joker, context)
+      if context.individual and context.cardarea == G.play then
+         if not context.blueprint
+            and context.poker_hands and next(context.poker_hands['Pair'])
+            and context.scoring_hand ~= nil and #context.scoring_hand == 2 and context.scoring_hand[1] == context.other_card
+         then
+            context.scoring_hand[1].suit = context.scoring_hand[2].suit
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_ghost_print = function(joker, context)
+      if context.cardarea == G.play and context.global then
+         if card.ability.extra.last_hand ~= 'Nothing' then
+            DV.SIM.add_mult(G.GAME.hands[card.ability.extra.last_hand].mult)
+            DV.SIM.add_chips(G.GAME.hands[card.ability.extra.last_hand].chips)
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_loan_shark = function(joker, context)
+      -- Effect unclear
+   end
+   DV.SIM.JOKERS.simulate_basement = function(joker, context)
+      -- Effect not relevant (takes place outside play)
+   end
+   DV.SIM.JOKERS.simulate_shepherd = function(joker, context)
+      if context.cardarea == G.play and context.global then
+         DV.SIM.add_chips(card.ability.extra.chips)
+      end
+   end
+   DV.SIM.JOKERS.simulate_knight = function(joker, context)
+      if context.cardarea == G.play and context.global then
+         DV.SIM.add_mult(card.ability.extra.mult)
+      end
+   end
+   DV.SIM.JOKERS.simulate_jmjb = function(joker, context)
+      -- Effect not relevant (takes place outside play)
+   end
+   DV.SIM.JOKERS.simulate_dogs_playing_poker = function(joker, context)
+      if context.cardarea == G.play and context.global then
+         local condition = true
+         for _, scoring_card in ipairs(context.scoring_hand) do
+            if DV.SIM.get_rank(scoring_card) >= 6 or DV.SIM.get_rank(scoring_card) < 2 then
+               condition = false
+            end
+         end
+
+         if condition then
+            DV.SIM.x_mult(card.ability.extra.xmult)
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_righthook = function(joker, context)
+      if context.cardarea == G.play and context.repetition then
+         if context.scoring_hand and context.other_card == context.scoring_hand[#context.scoring_hand] then
+            DV.SIM.add_reps(G.GAME.current_round.hands_left)
+         end
+      end
+   end
+   DV.SIM.JOKERS.simulate_fiendish = function(joker, context)
+      -- Effect unclear
+   end
+   DV.SIM.JOKERS.simulate_carnival = function(joker, context)
+      -- Effect not relevant (takes place outside play)
+   end
+   DV.SIM.JOKERS.simulate_sledgehammer = function(joker, context)
+      -- Effect not relevant (takes place outside play)?
+   end
+   DV.SIM.JOKERS.simulate_fingerprints = function(joker, context)
+      -- Effect not relevant (takes place outside play)?
+   end
+   DV.SIM.JOKERS.simulate_zero_shapiro = function(joker, context)
+      -- Effect not relevant (takes place outside play)?
+   end
+   DV.SIM.JOKERS.simulate_nil_bill = function(joker, context)
+      -- Effect unclear
+   end
+end
